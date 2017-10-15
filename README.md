@@ -83,7 +83,7 @@ Dao类如下：
 	        entity.password = "xxxx";
 	        userDao.update(where, entity);
 	        Toast.makeText(this, "update finished", Toast.LENGTH_SHORT).show();
-	   	}
+	     }
 * 查
 
 		public void query(View v) {

@@ -7,6 +7,9 @@ import com.bravo.dblib.BaseDao;
  */
 
 public class UserDao extends BaseDao<User>{
+    /**
+     * @return 创建数据库的语句。
+     */
     @Override
     public String createTable() {
         return "create table if not exists tb_user(user_id int,name varchar(20),password varchar(20))";
