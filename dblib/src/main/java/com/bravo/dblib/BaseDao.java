@@ -113,7 +113,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
 
     @Override
     public int delete(T entity) {
-        Map<String,String> map = getValues(entity);
+        Map<String, String> map = getValues(entity);
         Condition condition = new Condition(map);
         int delete = database.delete(tableName, condition.getWhereClause(), condition.getWhereArgs());
         return delete;
@@ -121,7 +121,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
 
     @Override
     public int update(T where, T entity) {
-        Map<String ,String> map = getValues(where);
+        Map<String, String> map = getValues(where);
         Condition condition = new Condition(map);
         ContentValues contentValues = getContentValues(getValues(entity));
         int update = database.update(tableName, contentValues, condition.getWhereClause(), condition.getWhereArgs());
@@ -131,12 +131,62 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
 
     @Override
     public List<T> query(T where) {
-        return null;
+        return query(where, null, null, null);
     }
 
     @Override
     public List<T> query(T where, String orderBy, String startIndex, Integer limit) {
-        return null;
+        Map<String, String> map = getValues(where);
+        String limitString = null;
+        if (startIndex != null && limit != null) {
+            limitString = startIndex + " , " + limit;
+        }
+        Condition condition = new Condition(map);
+        Cursor cursor = database.query(tableName, null, condition.getWhereClause(), condition.getWhereArgs(), null, null, orderBy, limitString);
+        List<T> result = getResult(cursor,where);
+        cursor.close();
+        return result;
+    }
+
+    private List<T> getResult(Cursor cursor, T where) {
+        ArrayList<T> result = new ArrayList<>();
+        T item = null;
+        while (cursor.moveToNext()){
+            try {
+                item = (T) where.getClass().newInstance();
+
+                Iterator<Map.Entry<String, Field>> iterator = cacheMap.entrySet().iterator();
+                while (iterator.hasNext()){
+                    Map.Entry<String, Field> next = iterator.next();
+                    String columunName = next.getKey();
+                    int columnIndex = cursor.getColumnIndex(columunName);
+                    Field field = next.getValue();
+
+                    Class<?> type = field.getType();
+                    if (columnIndex != -1){
+                        if (type == String.class){
+                            field.set(item,cursor.getString(columnIndex));
+                        }else if (type == Double.class){
+                            field.set(item,cursor.getDouble(columnIndex));
+                        }else if (type == Integer.class){
+                            field.set(item,cursor.getInt(columnIndex));
+                        }else if (type == Long.class){
+                            field.set(item,cursor.getLong(columnIndex));
+                        }else if (type == byte[].class){
+                            field.set(item,cursor.getBlob(columnIndex));
+                        }else{
+                           continue;
+                        }
+                    }
+                }
+                result.add(item);
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
     private Map<String, String> getValues(T entity) {
@@ -184,25 +234,25 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
     /**
      * 封装语句
      */
-    class Condition{
+    class Condition {
         /**
          * 查询条件
          * name=? && password =?
          */
         private String whereClause;
 
-        private  String[] whereArgs;
+        private String[] whereArgs;
 
-        public Condition(Map<String ,String> whereClause) {
+        public Condition(Map<String, String> whereClause) {
             ArrayList<String> list = new ArrayList<>();
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("1 = 1");
             Set<String> keys = whereClause.keySet();
             Iterator<String> iteratorKey = keys.iterator();
-            while (iteratorKey.hasNext()){
+            while (iteratorKey.hasNext()) {
                 String key = iteratorKey.next();
                 String value = whereClause.get(key);
-                if (value != null){
+                if (value != null) {
                     stringBuilder.append(" and " + key + " =?");
                     list.add(value);
                 }
