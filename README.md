@@ -97,3 +97,5 @@ Dao类如下：
 	            Log.e(TAG, query.toString());
 	        }
     	}
+ ### 使用方法
+    将dblib以module的形式导入项目即可使用。目前只实现了简单的功能，还需要更多的扩展。
