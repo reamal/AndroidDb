@@ -125,7 +125,6 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
         Condition condition = new Condition(map);
         ContentValues contentValues = getContentValues(getValues(entity));
         int update = database.update(tableName, contentValues, condition.getWhereClause(), condition.getWhereArgs());
-
         return update;
     }
 
@@ -154,7 +153,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
         while (cursor.moveToNext()){
             try {
                 item = (T) where.getClass().newInstance();
-
+                //使用缓存的map key-value集合
                 Iterator<Map.Entry<String, Field>> iterator = cacheMap.entrySet().iterator();
                 while (iterator.hasNext()){
                     Map.Entry<String, Field> next = iterator.next();
@@ -164,6 +163,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
 
                     Class<?> type = field.getType();
                     if (columnIndex != -1){
+                        //逐个判断类型，然后进行赋值。
                         if (type == String.class){
                             field.set(item,cursor.getString(columnIndex));
                         }else if (type == Double.class){
@@ -191,11 +191,13 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
 
     private Map<String, String> getValues(T entity) {
         HashMap<String, String> result = new HashMap<>();
+        //准备遍历类的对象中的成员
         Iterator<Field> fieldIterator = cacheMap.values().iterator();
         while (fieldIterator.hasNext()) {
+            //拿到类对象中的成员
             Field columnToField = fieldIterator.next();
-            String cacheKey = null;
-            String cacheValue = null;
+            String cacheKey = null;//列名
+            String cacheValue = null;//变量的值
             if (columnToField.getAnnotation(DbFlied.class).value() != null) {
                 cacheKey = columnToField.getAnnotation(DbFlied.class).value();
             } else {
@@ -210,13 +212,14 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
-
+            //将列名和变量的值存起来。
             result.put(cacheKey, cacheValue);
         }
 
-        return result;
+        return result;//返回key-value集合
     }
 
+    //构造ContentValues参数
     private ContentValues getContentValues(Map<String, String> map) {
         ContentValues contentValues = new ContentValues();
         Set<String> keys = map.keySet();
@@ -253,6 +256,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
                 String key = iteratorKey.next();
                 String value = whereClause.get(key);
                 if (value != null) {
+                    //拼装String
                     stringBuilder.append(" and " + key + " =?");
                     list.add(value);
                 }

@@ -1,6 +1,6 @@
 # AndroidDb
 对安卓原生db操作进行封装，方便数据库的增删改查操作。使用简单方便。
-
+详细的介绍请移步CSDN : http://blog.csdn.net/achilles_lee/article/details/78327849
 ##简单使用
 
 ###准备工作

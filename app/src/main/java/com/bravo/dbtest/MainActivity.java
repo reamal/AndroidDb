@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 查
      */
+
     public void query(View v) {
         User where = new User();
         where.name = "alex2";
